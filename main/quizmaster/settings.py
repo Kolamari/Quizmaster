@@ -18,8 +18,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-quizmaster-dev-key-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['Ymgrahics.pythonanywhere.com', '127.0.0.1', 'localhost']
+# ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['Ymgrahics.pythonanywhere.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['.render.com', '127.0.0.1', 'localhost']
 
 # Application definition
 INSTALLED_APPS = [
