@@ -21,7 +21,8 @@ DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 # ALLOWED_HOSTS = ['*']
 # ALLOWED_HOSTS = ['Ymgrahics.pythonanywhere.com', '127.0.0.1', 'localhost']
 # ALLOWED_HOSTS = ['.render.com', '127.0.0.1', 'localhost']
-ALLOWED_HOSTS = ['quizmaster-1-zl62.onrender.com', 'localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['quizmaster-1-zl62.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['.onrender.com', '127.0.0.1', 'localhost']
 
 # Application definition
 INSTALLED_APPS = [
