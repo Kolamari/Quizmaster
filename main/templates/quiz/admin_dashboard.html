@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - QuizMaster{% endblock %}
+
+{% block content %}
+<section class="py-8 px-4 bg-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 ">
+            <div class="flex items-center space-x-3 mb-2">
+                <div class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-chart-line text-primary-700"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Lecturer Dashboard</h1>
+                    <p class="text-gray-600 text-sm">Manage quizzes, questions, and monitor student performance</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-list-ol text-xl text-primary-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ total_questions }}</p>
+                <p class="text-gray-600 text-xs">Total Questions</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-check-circle text-xl text-green-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ active_questions }}</p>
+                <p class="text-gray-600 text-xs">Active Questions</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-users text-xl text-accent-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ total_students }}</p>
+                <p class="text-gray-600 text-xs">Students</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-trophy text-xl text-purple-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ completed_attempts }}</p>
+                <p class="text-gray-600 text-xs">Completed</p>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-2xl shadow-md p-6 mb-8 ">
+            <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-bolt mr-2 text-primary-600"></i>Quick Actions</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="{% url 'manage_questions' %}" class="flex flex-col items-center p-4 bg-primary-50 rounded-xl hover:bg-primary-100 transition-all group">
+                    <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mb-2 group-hover:bg-primary-200 transition-all">
+                        <i class="fas fa-list text-primary-700"></i>
+                    </div>
+                    <span class="text-sm font-medium text-primary-800">Questions</span>
+                </a>
+                <a href="{% url 'add_question' %}" class="flex flex-col items-center p-4 bg-accent-50 rounded-xl hover:bg-accent-100 transition-all group">
+                    <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center mb-2 group-hover:bg-accent-200 transition-all">
+                        <i class="fas fa-plus text-accent-700"></i>
+                    </div>
+                    <span class="text-sm font-medium text-accent-800">Add Question</span>
+                </a>
+                <a href="{% url 'quiz_settings' %}" class="flex flex-col items-center p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-all group">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-2 group-hover:bg-purple-200 transition-all">
+                        <i class="fas fa-cog text-purple-700"></i>
+                    </div>
+                    <span class="text-sm font-medium text-purple-800">Settings</span>
+                </a>
+                <a href="{% url 'view_results' %}" class="flex flex-col items-center p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-all group">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-2 group-hover:bg-green-200 transition-all">
+                        <i class="fas fa-chart-bar text-green-700"></i>
+                    </div>
+                    <span class="text-sm font-medium text-green-800">Results</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Recent Attempts -->
+        <div class="bg-white rounded-2xl shadow-md p-6 ">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900"><i class="fas fa-history mr-2 text-primary-600"></i>Recent Attempts</h2>
+                <a href="{% url 'view_results' %}" class="text-sm text-primary-700 font-medium hover:underline">View All</a>
+            </div>
+            
+            {% if recent_attempts %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-gray-600 border-b border-gray-200">
+                                <th class="text-left py-3 px-4 font-medium">Student</th>
+                                <th class="text-left py-3 px-4 font-medium">Status</th>
+                                <th class="text-left py-3 px-4 font-medium">Score</th>
+                                <th class="text-left py-3 px-4 font-medium">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in recent_attempts %}
+                                <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-xs font-bold text-primary-700">
+                                                {{ attempt.user.first_name|first|default:attempt.user.username|first|upper }}
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-gray-900">{{ attempt.user.get_full_name|default:attempt.user.username }}</p>
+                                                <p class="text-xs text-gray-500">{{ attempt.user.email }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="px-3 py-1 rounded-full text-xs font-medium 
+                                            {% if attempt.status == 'completed' %}bg-green-100 text-green-700
+                                            {% elif attempt.status == 'timed_out' %}bg-yellow-100 text-yellow-700
+                                            {% else %}bg-blue-100 text-blue-700{% endif %}">
+                                            {{ attempt.status|title }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        {% if attempt.score is not None %}
+                                            <span class="font-semibold {% if attempt.is_passed %}text-green-600{% else %}text-red-600{% endif %}">
+                                                {{ attempt.score }}/{{ attempt.total_questions }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-gray-500">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-4 text-gray-600">{{ attempt.started_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500">No attempts yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

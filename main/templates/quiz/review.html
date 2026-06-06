@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Quiz - QuizMaster{% endblock %}
+
+{% block content %}
+<section class="py-8 px-4 bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 ">
+            <a href="{% url 'quiz_results' %}" class="inline-flex items-center text-sm text-gray-600 hover:text-primary-700 transition-colors mb-4">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Results
+            </a>
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-search text-primary-700"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Review Answers</h1>
+                        <p class="text-gray-600 text-sm">Software Engineering (SE101)</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="px-4 py-2 bg-primary-100 text-primary-800 rounded-lg font-semibold">
+                        Score: {{ attempt.score }}/{{ attempt.total_questions }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Score Summary -->
+        <div class="bg-white rounded-2xl shadow-md p-6 mb-6 ">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Overall Performance</p>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-3xl font-bold {% if is_passed %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ score_percentage }}%
+                        </div>
+                        <div class="flex space-x-4 text-sm">
+                            <span class="flex items-center text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                {{ attempt.score }} Correct
+                            </span>
+                            <span class="flex items-center text-red-600">
+                                <i class="fas fa-times-circle mr-1"></i>
+                                {{ attempt.total_questions|add:"-"|add:attempt.score|default:attempt.total_questions }} Wrong
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full md:w-48">
+                    <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full {% if is_passed %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full" style="width: {{ score_percentage }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Questions Review -->
+        <div class="space-y-4">
+            {% for q in questions_data %}
+                <div class="bg-white rounded-2xl shadow-md p-6 " style="animation-delay: {{ forloop.counter }}00ms">
+                    <div class="flex items-start space-x-3 mb-4">
+                        <div class="w-10 h-10 {% if q.is_correct %}bg-green-100{% else %}bg-red-100{% endif %} rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span class="font-bold {% if q.is_correct %}text-green-700{% else %}text-red-700{% endif %}">{{ forloop.counter }}</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">{{ q.question.text }}</h3>
+                                {% if q.is_correct %}
+                                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-red-500 text-xl"></i>
+                                {% endif %}
+                            </div>
+                            {% if q.question.explanation %}
+                                <p class="text-sm text-gray-500 mb-3">{{ q.question.explanation }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="ml-13 space-y-2">
+                        {% for option in q.options %}
+                            <div class="flex items-center space-x-3 p-3 rounded-xl border-2 
+                                {% if option.id == q.correct_option.id %}
+                                    border-green-500 bg-green-50
+                                {% elif option.id == q.selected_option.id and not q.is_correct %}
+                                    border-red-500 bg-red-50
+                                {% else %}
+                                    border-gray-100 bg-gray-50
+                                {% endif %}">
+                                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0
+                                    {% if option.id == q.correct_option.id %}
+                                        bg-green-500 text-white
+                                    {% elif option.id == q.selected_option.id and not q.is_correct %}
+                                        bg-red-500 text-white
+                                    {% else %}
+                                        bg-gray-200 text-gray-600
+                                    {% endif %}">
+                                    {{ forloop|add:64|center:1 }}
+                                </div>
+                                <span class="flex-1 text-gray-800 text-sm">{{ option.text }}</span>
+                                {% if option.id == q.correct_option.id %}
+                                    <i class="fas fa-check text-green-600"></i>
+                                {% elif option.id == q.selected_option.id and not q.is_correct %}
+                                    <i class="fas fa-times text-red-600"></i>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Bottom Actions -->
+        <div class="mt-8 text-center pb-8">
+            <a href="{% url 'quiz_results' %}" class="px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-all inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Results
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

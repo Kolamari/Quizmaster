@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Results - QuizMaster{% endblock %}
+
+{% block content %}
+<section class="py-8 px-4 bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 ">
+            <a href="{% url 'quiz_dashboard' %}" class="inline-flex items-center text-sm text-gray-600 hover:text-primary-700 transition-colors mb-4">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-chart-bar text-primary-700"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Quiz Results</h1>
+                    <p class="text-gray-600 text-sm">Software Engineering (SE101)</p>
+                </div>
+            </div>
+        </div>
+        
+        {% if results_released %}
+            <!-- Results Card -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-6 ">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-28 h-28 rounded-full mb-4 {% if is_passed %}bg-green-100{% else %}bg-red-100{% endif %}">
+                        <div class="text-center">
+                            <span class="text-3xl font-bold {% if is_passed %}text-green-700{% else %}text-red-700{% endif %}">{{ score_percentage }}%</span>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-1">
+                        {% if is_passed %}
+                            <i class="fas fa-trophy text-yellow-500 mr-2"></i>Congratulations!
+                        {% else %}
+                            <i class="fas fa-times-circle text-red-500 mr-2"></i>Keep Trying
+                        {% endif %}
+                    </h2>
+                    <p class="text-gray-600">
+                        {% if is_passed %}
+                            You passed the quiz with a score of {{ attempt.score }}/{{ attempt.total_questions }}
+                        {% else %}
+                            You scored {{ attempt.score }}/{{ attempt.total_questions }}. The passing score is {{ settings.passing_score }}.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- Score Details -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-gray-50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-bold text-primary-700">{{ attempt.score }}</p>
+                        <p class="text-gray-600 text-xs">Correct Answers</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-bold text-gray-700">{{ attempt.total_questions|add:"-"|add:attempt.score|default:attempt.total_questions }}</p>
+                        <p class="text-gray-600 text-xs">Incorrect</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-bold text-accent-700">{{ attempt.total_questions }}</p>
+                        <p class="text-gray-600 text-xs">Total Questions</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-bold {% if is_passed %}text-green-700{% else %}text-red-700{% endif %}">{{ score_percentage }}%</p>
+                        <p class="text-gray-600 text-xs">Percentage</p>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mb-8">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Your Score</span>
+                        <span>{{ attempt.score }}/{{ attempt.total_questions }}</span>
+                    </div>
+                    <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full {% if is_passed %}bg-gradient-to-r from-green-500 to-green-600{% else %}bg-gradient-to-r from-red-500 to-red-600{% endif %} rounded-full transition-all duration-1000" style="width: {{ score_percentage }}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>0</span>
+                        <span>Passing: {{ settings.passing_score }}</span>
+                        <span>{{ attempt.total_questions }}</span>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="{% url 'review_quiz' %}" class="px-6 py-3 btn-primary rounded-xl font-semibold text-white shadow-lg inline-flex items-center">
+                        <i class="fas fa-search mr-2"></i>Review Answers
+                    </a>
+                    <a href="{% url 'quiz_dashboard' %}" class="px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Attempt Details -->
+            <div class="bg-white rounded-2xl shadow-md p-6 ">
+                <h3 class="text-lg font-bold text-gray-900 mb-4"><i class="fas fa-info-circle mr-2 text-primary-600"></i>Attempt Details</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600">Started At</span>
+                        <span class="font-medium text-gray-900">{{ attempt.started_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600">Completed At</span>
+                        <span class="font-medium text-gray-900">{{ attempt.completed_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600">Status</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium {% if attempt.status == 'completed' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                            {{ attempt.status|title }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600">Passing Score</span>
+                        <span class="font-medium text-gray-900">{{ settings.passing_score }}</span>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Results Not Released -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 text-center ">
+                <div class="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-lock text-4xl text-primary-700"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">Results Not Yet Released</h2>
+                <p class="text-gray-600 mb-2">Your quiz has been submitted and graded successfully.</p>
+                <p class="text-gray-600 mb-6">Results will be released on:</p>
+                <div class="inline-flex items-center px-6 py-3 bg-primary-50 rounded-xl mb-6">
+                    <i class="fas fa-calendar-alt text-primary-700 mr-3 text-xl"></i>
+                    <span class="text-lg font-semibold text-primary-800">
+                        {% if settings.results_release_time %}
+                            {{ settings.results_release_time|date:"F d, Y at H:i" }}
+                        {% else %}
+                            To be announced
+                        {% endif %}
+                    </span>
+                </div>
+                <p class="text-gray-500 text-sm mb-6">Please check back after the scheduled release time.</p>
+                <a href="{% url 'quiz_dashboard' %}" class="px-6 py-3 btn-primary rounded-xl font-semibold text-white shadow-lg inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Dashboard - QuizMaster{% endblock %}
+
+{% block content %}
+<section class="py-8 px-4 bg-gray-100 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 ">
+            <div class="flex items-center space-x-3 mb-2">
+                <div class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-book-open text-primary-700"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Quiz Dashboard</h1>
+                    <p class="text-gray-600 text-sm">Software Engineering (SE101)</p>
+                </div>
+            </div>
+        </div>
+        
+        {% if current_attempt %}
+        <!-- Ongoing Quiz Alert -->
+        <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 mb-8 text-white shadow-lg ">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h2 class="text-xl font-bold mb-1"><i class="fas fa-play-circle mr-2"></i>Quiz In Progress</h2>
+                    <p class="text-white/80 text-sm">You have an ongoing quiz session. Resume where you left off.</p>
+                </div>
+                <a href="{% url 'take_quiz' %}" class="px-6 py-3 bg-white text-primary-700 rounded-xl font-semibold hover:bg-white/90 transition-all shadow-md inline-flex items-center">
+                    <i class="fas fa-play mr-2"></i>Resume Quiz
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-list-ol text-xl text-primary-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ total_questions }}</p>
+                <p class="text-gray-600 text-xs">Total Questions</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-clock text-xl text-accent-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ settings.duration_minutes }}</p>
+                <p class="text-gray-600 text-xs">Minutes</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-check-circle text-xl text-primary-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ settings.passing_score }}</p>
+                <p class="text-gray-600 text-xs">Passing Score</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 card-shadow text-center ">
+                <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-trophy text-xl text-accent-700"></i>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ settings.total_questions }}</p>
+                <p class="text-gray-600 text-xs">Max Score</p>
+            </div>
+        </div>
+        
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Start Quiz Section -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-md p-6 mb-6 ">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-play-circle mr-2 text-primary-600"></i>Start Quiz</h2>
+                    
+                    {% if can_take_quiz and not current_attempt %}
+                        <div class="bg-primary-50 rounded-xl p-6 border border-primary-100">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-rocket text-2xl text-primary-700"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900 mb-1">Ready to begin?</h3>
+                                    <p class="text-gray-600 text-sm mb-4">
+                                        The quiz contains {{ settings.total_questions }} multiple-choice questions. 
+                                        You will have {{ settings.duration_minutes }} minutes to complete it. 
+                                        Questions and options will be randomly shuffled.
+                                    </p>
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        <span class="px-3 py-1 bg-white rounded-full text-xs text-primary-700 font-medium">
+                                            <i class="fas fa-random mr-1"></i>Shuffled
+                                        </span>
+                                        <span class="px-3 py-1 bg-white rounded-full text-xs text-primary-700 font-medium">
+                                            <i class="fas fa-clock mr-1"></i>{{ settings.duration_minutes }} mins
+                                        </span>
+                                        <span class="px-3 py-1 bg-white rounded-full text-xs text-primary-700 font-medium">
+                                            <i class="fas fa-robot mr-1"></i>Auto-graded
+                                        </span>
+                                    </div>
+                                    <a href="{% url 'start_quiz' %}" class="inline-flex items-center px-6 py-3 btn-primary rounded-xl font-semibold text-white shadow-lg">
+                                        <i class="fas fa-play mr-2"></i>Start Quiz Now
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif completed_attempts.exists %}
+                        <div class="bg-accent-50 rounded-xl p-6 border border-accent-100">
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-xl text-accent-700"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Quiz Completed</h3>
+                                    <p class="text-gray-600 text-sm">You have already completed this quiz.</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <a href="{% url 'quiz_results' %}" class="px-5 py-2.5 bg-accent-600 text-white rounded-xl font-medium hover:bg-accent-700 transition-all inline-flex items-center">
+                                    <i class="fas fa-chart-bar mr-2"></i>View Results
+                                </a>
+                                {% if results_released %}
+                                    <a href="{% url 'review_quiz' %}" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all inline-flex items-center">
+                                        <i class="fas fa-search mr-2"></i>Review Answers
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="bg-gray-50 rounded-xl p-6 border border-gray-200 text-center">
+                            <i class="fas fa-lock text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-600">Quiz is not available at the moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Quiz Rules -->
+                <div class="bg-white rounded-2xl shadow-md p-6 ">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-clipboard-list mr-2 text-primary-600"></i>Quiz Rules</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl">
+                            <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-700">1</div>
+                            <p class="text-gray-700 text-sm">The quiz consists of <strong>{{ settings.total_questions }}</strong> multiple-choice questions with 4 options each.</p>
+                        </div>
+                        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl">
+                            <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-700">2</div>
+                            <p class="text-gray-700 text-sm">You have <strong>{{ settings.duration_minutes }} minutes</strong> to complete the quiz. The quiz will auto-submit when time expires.</p>
+                        </div>
+                        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl">
+                            <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-700">3</div>
+                            <p class="text-gray-700 text-sm">Questions and answer options are <strong>randomly shuffled</strong> for each attempt.</p>
+                        </div>
+                        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl">
+                            <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-700">4</div>
+                            <p class="text-gray-700 text-sm">You can navigate between questions and change your answers before submitting.</p>
+                        </div>
+                        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl">
+                            <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-700">5</div>
+                            <p class="text-gray-700 text-sm">Results will be released at the scheduled time set by your lecturer.</p>
+                        </div>
+                        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl">
+                            <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-700">6</div>
+                            <p class="text-gray-700 text-sm">Do not refresh the page or close the browser during the quiz.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div>
+                <!-- Quiz Status -->
+                <div class="bg-white rounded-2xl shadow-md p-6 mb-6 ">
+                    <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-info-circle mr-2 text-primary-600"></i>Quiz Status</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600 text-sm">Status</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium {% if settings.is_active %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                                {% if settings.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600 text-sm">Duration</span>
+                            <span class="font-medium text-gray-900">{{ settings.duration_minutes }} mins</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600 text-sm">Questions</span>
+                            <span class="font-medium text-gray-900">{{ settings.total_questions }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600 text-sm">Passing Score</span>
+                            <span class="font-medium text-gray-900">{{ settings.passing_score }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600 text-sm">Results Release</span>
+                            <span class="font-medium text-gray-900 text-xs">
+                                {% if settings.results_release_time %}
+                                    {{ settings.results_release_time|date:"M d, Y H:i" }}
+                                {% else %}
+                                    Immediate
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Attempt History -->
+                <div class="bg-white rounded-2xl shadow-md p-6 ">
+                    <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-history mr-2 text-primary-600"></i>Your Attempts</h3>
+                    {% if completed_attempts %}
+                        <div class="space-y-3">
+                            {% for attempt in completed_attempts %}
+                                <div class="p-3 bg-gray-50 rounded-xl">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-xs text-gray-600">{{ attempt.started_at|date:"M d, Y" }}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-medium {% if attempt.status == 'completed' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                                            {{ attempt.status|title }}
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-semibold text-gray-900">Score: {{ attempt.score|default:"N/A" }}/{{ attempt.total_questions }}</span>
+                                        {% if attempt.score is not None %}
+                                            <span class="text-sm {% if attempt.is_passed %}text-green-600{% else %}text-red-600{% endif %} font-medium">
+                                                {{ attempt.get_percentage }}%
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-sm text-center py-4">No attempts yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

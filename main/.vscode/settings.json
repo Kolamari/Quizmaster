@@ -1,0 +1,16 @@
+{
+    "python.defaultInterpreterPath": "./venv/Scripts/python",
+    "python.terminal.activateEnvironment": true,
+    "files.associations": {
+        "*.html": "django-html"
+    },
+    "emmet.includeLanguages": {
+        "django-html": "html"
+    },
+    "[django-html]": {
+        "editor.defaultFormatter": "junstyle.vscode-django"
+    },
+    "python.analysis.extraPaths": [
+        "./venv/Lib/site-packages"
+    ]
+}

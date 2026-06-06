@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}QuizMaster{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef7ff',
+                            100: '#d9edff',
+                            200: '#bce0ff',
+                            300: '#8ecdff',
+                            400: '#59b0ff',
+                            500: '#3392f5',
+                            600: '#1a73e8',
+                            700: '#155cc5',
+                            800: '#174b9e',
+                            900: '#19417e',
+                            950: '#132a52',
+                        },
+                        accent: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #132a52 0%, #19417e 50%, #0f766e 100%);
+        }
+        .gradient-bg-light {
+            background: linear-gradient(135deg, #eef7ff 0%, #f0fdfa 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(19, 42, 82, 0.1), 0 2px 4px -1px rgba(19, 42, 82, 0.06);
+        }
+        .card-shadow:hover {
+            box-shadow: 0 10px 15px -3px rgba(19, 42, 82, 0.15), 0 4px 6px -2px rgba(19, 42, 82, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1a73e8 0%, #0d9488 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(26, 115, 232, 0.3);
+        }
+        .btn-secondary {
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #2dd4bf, #1a73e8);
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+        . {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .quiz-option {
+            transition: all 0.2s ease;
+        }
+        .quiz-option:hover {
+            transform: translateX(4px);
+        }
+        .timer-warning {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation -->
+    {% comment %} <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <a href="{% url 'home' %}" class="flex items-center space-x-3 group">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 transition-all duration-300">
+                        <i class="fas fa-graduation-cap text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-tight">QuizMaster</span>
+                        <span class="hidden sm:inline text-xs text-white/70 ml-2">| SE Course</span>
+                    </div>
+                </a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="{% url 'home' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if request.path == '/' %}active bg-white/10{% endif %}">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    {% if user.is_superuser %}
+                        <a href="{% url 'admin_dashboard' %}" class="nav-link font-semibold text-indigo-600">
+                            <i class="fas fa-chart-line mr-1"></i> Dashboard
+                        </a>
+                        <a href="/admin/" target="_blank" class="nav-link text-gray-500 text-sm">
+                            <i class="fas fa-database mr-1"></i> Database
+                        </a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        {% if user.profile.is_lecturer %}
+                            <a href="{% url 'admin_dashboard' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'admin' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-chart-line mr-2"></i>Dashboard
+                            </a>
+                            <a href="{% url 'manage_questions' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'question' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-list mr-2"></i>Questions
+                            </a>
+                            <a href="{% url 'view_results' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'results' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-chart-bar mr-2"></i>Results
+                            </a>
+                        {% else %}
+                            <a href="{% url 'quiz_dashboard' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'quiz' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-book-open mr-2"></i>Quiz
+                            </a>
+                            <a href="{% url 'profile' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'profile' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-user mr-2"></i>Profile
+                            </a>
+                        {% endif %}
+                        
+                        <div class="relative ml-4" id="userMenuContainer">
+                            <button onclick="toggleUserMenu()" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
+                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-semibold">
+                                    {{ user.first_name|first|default:user.username|first|upper }}
+                                </div>
+                                <span class="text-sm font-medium">{{ user.first_name|default:user.username }}</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-sm font-semibold text-gray-800">{{ user.get_full_name|default:user.username }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+
+                            {% if user.is_superuser %}
+                                <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 text-sm text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">
+                                    <i class="fas fa-chart-line mr-2"></i>Admin Dashboard
+                                </a>
+                            {% else %}
+                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-user-circle mr-2 text-primary-600"></i>My Profile
+                                </a>
+                            {% endif %}
+
+                            <div class="border-t border-gray-100 my-1"></div>
+                            
+                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+
+                    {% else %}
+                        <a href="{% url 'login' %}" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                        <a href="{% url 'register' %}" class="ml-2 px-5 py-2 bg-white text-primary-700 rounded-lg text-sm font-semibold hover:bg-white/90 transition-all shadow-md">
+                            Register
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-all">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden border-t border-white/10">
+            <div class="px-4 py-3 space-y-1">
+                <a href="{% url 'home' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                    <i class="fas fa-home mr-2"></i>Home
+                </a>
+                {% if user.is_authenticated %}
+                    {% if user.profile.is_lecturer %}
+                        <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-chart-line mr-2"></i>Dashboard
+                        </a>
+                        <a href="{% url 'manage_questions' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-list mr-2"></i>Questions
+                        </a>
+                    {% else %}
+                        <a href="{% url 'quiz_dashboard' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-book-open mr-2"></i>Quiz
+                        </a>
+                        <a href="{% url 'profile' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-user mr-2"></i>Profile
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 rounded-lg text-sm font-medium text-red-300 hover:bg-white/10 transition-all">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </a>
+                    <a href="{% url 'register' %}" class="block px-4 py-2 rounded-lg text-sm font-medium bg-white/20 transition-all">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+     {% endcomment %}
+     <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="{% url 'home' %}" class="flex items-center space-x-3 group">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 transition-all duration-300">
+                        <i class="fas fa-graduation-cap text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-tight">QuizMaster</span>
+                        <span class="hidden sm:inline text-xs text-white/70 ml-2">| SE Course</span>
+                    </div>
+                </a>
+                
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="{% url 'home' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if request.path == '/' %}active bg-white/10{% endif %}">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+
+                    {% if user.is_authenticated %}
+                        {% if user.is_superuser %}
+                            <a href="{% url 'admin_dashboard' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'admin' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-chart-line mr-2"></i>Dashboard
+                            </a>
+                            <a href="{% url 'manage_questions' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'question' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-list mr-2"></i>Questions
+                            </a>
+                            <a href="{% url 'view_results' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'results' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-chart-bar mr-2"></i>Results
+                            </a>
+                        {% else %}
+                            <a href="{% url 'quiz_dashboard' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'quiz' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-book-open mr-2"></i>Quiz
+                            </a>
+                            <a href="{% url 'profile' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all {% if 'profile' in request.path %}active bg-white/10{% endif %}">
+                                <i class="fas fa-user mr-2"></i>Profile
+                            </a>
+                        {% endif %}
+                        
+                        <div class="relative ml-4" id="userMenuContainer">
+                            <button onclick="toggleUserMenu()" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
+                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-semibold">
+                                    {{ user.first_name|first|default:user.username|first|upper }}
+                                </div>
+                                <span class="text-sm font-medium">{{ user.first_name|default:user.username }}</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <p class="text-sm font-semibold text-gray-800">{{ user.get_full_name|default:user.username }}</p>
+                                    <p class="text-xs text-gray-500">{{ user.email }}</p>
+                                </div>
+
+                                {% if user.is_superuser %}
+                                    <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 text-sm text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">
+                                        <i class="fas fa-chart-line mr-2"></i>Admin Dashboard
+                                    </a>
+                                    <a href="/admin/" target="_blank" class="block px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-50">
+                                        <i class="fas fa-database mr-2"></i>Django Backend
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <i class="fas fa-user-circle mr-2 text-primary-600"></i>My Profile
+                                    </a>
+                                {% endif %}
+
+                                <div class="border-t border-gray-100 my-1"></div>
+                                
+                                <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <a href="{% url 'login' %}" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                        <a href="{% url 'register' %}" class="ml-2 px-5 py-2 bg-white text-primary-700 rounded-lg text-sm font-semibold hover:bg-white/90 transition-all shadow-md">
+                            Register
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-all">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="mobileMenu" class="hidden md:hidden border-t border-white/10">
+            <div class="px-4 py-3 space-y-1">
+                <a href="{% url 'home' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                    <i class="fas fa-home mr-2"></i>Home
+                </a>
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-chart-line mr-2"></i>Dashboard
+                        </a>
+                        <a href="{% url 'manage_questions' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-list mr-2"></i>Questions
+                        </a>
+                    {% else %}
+                        <a href="{% url 'quiz_dashboard' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-book-open mr-2"></i>Quiz
+                        </a>
+                        <a href="{% url 'profile' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                            <i class="fas fa-user mr-2"></i>Profile
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 rounded-lg text-sm font-medium text-red-300 hover:bg-white/10 transition-all">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </a>
+                    <a href="{% url 'register' %}" class="block px-4 py-2 rounded-lg text-sm font-medium bg-white/20 transition-all">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+     
+    <!-- Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% for message in messages %}
+                <div class=" mb-3 p-4 rounded-xl border-l-4 
+                    {% if message.tags == 'success' %}bg-green-50 border-green-500 text-green-700
+                    {% elif message.tags == 'error' %}bg-red-50 border-red-500 text-red-700
+                    {% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-500 text-yellow-700
+                    {% elif message.tags == 'info' %}bg-blue-50 border-blue-500 text-blue-700
+                    {% else %}bg-gray-50 border-gray-500 text-gray-700{% endif %}">
+                    <div class="flex items-center">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3 text-lg"></i>
+                        <span class="text-sm font-medium">{{ message }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+    
+   <footer class="gradient-bg text-white mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-xl"></i>
+                    </div>
+                    <span class="text-lg font-bold">QuizMaster</span>
+                </div>
+                <p class="text-white/70 text-sm leading-relaxed">
+                    A comprehensive course-specific online quiz and automated grading system for Software Engineering education.
+                </p>
+            </div>
+
+            <div>
+                <h3 class="font-semibold mb-4 text-white/90">Quick Links</h3>
+                <ul class="space-y-2 text-sm text-white/70">
+                    <li><a href="{% url 'home' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>Home</a></li>
+                    
+                    {% if user.is_authenticated %}
+                        {% if user.is_superuser %}
+                            <li><a href="{% url 'admin_dashboard' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>Admin Dashboard</a></li>
+                            <li><a href="{% url 'manage_questions' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>Manage Questions</a></li>
+                            <li><a href="{% url 'view_results' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>Student Results</a></li>
+                        {% else %}
+                            <li><a href="{% url 'quiz_dashboard' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>Quiz Dashboard</a></li>
+                            <li><a href="{% url 'profile' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>My Profile</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a href="{% url 'login' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>Login</a></li>
+                        <li><a href="{% url 'register' %}" class="hover:text-white transition-colors"><i class="fas fa-chevron-right mr-2 text-xs"></i>Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="font-semibold mb-4 text-white/90">Course Info</h3>
+                <ul class="space-y-2 text-sm text-white/70">
+                    <li><i class="fas fa-book mr-2"></i>Software Engineering (SE101)</li>
+                    <li><i class="fas fa-clock mr-2"></i>60 Minutes Duration</li>
+                    <li><i class="fas fa-list-ol mr-2"></i>50 MCQ Questions</li>
+                    <li><i class="fas fa-check-double mr-2"></i>Automated Grading</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="border-t border-white/10 mt-8 pt-6 text-center text-sm text-white/50">
+            <p> &copy; {% now "Y" %} QuizMaster - Federal University Gashua. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+    
+    <!-- JavaScript -->
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const container = document.getElementById('userMenuContainer');
+            const menu = document.getElementById('userMenu');
+            if (container && !container.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+        
+        // Auto-dismiss messages after 5 seconds
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.');
+            messages.forEach(function(msg) {
+                msg.style.transition = 'opacity 0.5s ease';
+                msg.style.opacity = '0';
+                setTimeout(function() {
+                    msg.remove();
+                }, 500);
+            });
+        }, 5000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block title %}Taking Quiz - QuizMaster{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-option.selected {
+        border-color: #1a73e8;
+        background-color: #eef7ff;
+    }
+    .quiz-option.selected .option-letter {
+        background-color: #1a73e8;
+        color: white;
+    }
+    .question-nav-btn {
+        transition: all 0.2s ease;
+    }
+    .question-nav-btn:hover {
+        transform: scale(1.1);
+    }
+    .question-nav-btn.answered {
+        background-color: #14b8a6;
+        color: white;
+        border-color: #14b8a6;
+    }
+    .question-nav-btn.current {
+        ring: 2px;
+        ring-color: #1a73e8;
+        border-color: #1a73e8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="min-h-screen bg-gray-100">
+    <!-- Quiz Header with Timer -->
+    <div class="gradient-bg text-white sticky top-16 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-medium"><i class="fas fa-book-open mr-2"></i>SE101 Quiz</span>
+                    <span class="hidden sm:inline text-white/40">|</span>
+                    <span class="text-sm"><i class="fas fa-list-ol mr-1"></i><span id="answeredCount">0</span>/{{ total_questions }}</span>
+                </div>
+                
+                <!-- Timer -->
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-white/10 rounded-lg px-4 py-2 backdrop-blur-sm">
+                        <i class="fas fa-clock text-lg" id="timerIcon"></i>
+                        <span id="timer" class="text-xl font-mono font-bold">--:--</span>
+                    </div>
+                    <button onclick="confirmSubmit()" class="px-5 py-2 bg-white text-primary-700 rounded-lg font-semibold text-sm hover:bg-white/90 transition-all shadow-md">
+                        <i class="fas fa-check-circle mr-1"></i>Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="h-1 bg-white/10">
+            <div id="progressBar" class="h-full bg-accent-400 transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid lg:grid-cols-4 gap-6">
+            <!-- Question Navigation Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-md p-5 sticky top-36">
+                    <h3 class="font-semibold text-gray-900 mb-4"><i class="fas fa-th-large mr-2 text-primary-600"></i>Questions</h3>
+                    <div class="grid grid-cols-5 gap-2" id="questionNav">
+                        {% for q in questions_data %}
+                            <button onclick="goToQuestion({{ forloop.counter0 }})" 
+                                    id="navBtn{{ forloop.counter }}"
+                                    class="question-nav-btn w-10 h-10 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-primary-400 {% if q.selected %}answered{% endif %}">
+                                {{ forloop.counter }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex items-center space-x-2 text-xs text-gray-600 mb-2">
+                            <div class="w-3 h-3 rounded bg-accent-500"></div>
+                            <span>Answered</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-xs text-gray-600 mb-2">
+                            <div class="w-3 h-3 rounded border-2 border-primary-600 bg-white"></div>
+                            <span>Current</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-xs text-gray-600">
+                            <div class="w-3 h-3 rounded border-2 border-gray-200 bg-white"></div>
+                            <span>Unanswered</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question Area -->
+            <div class="lg:col-span-3">
+                <form id="quizForm" method="post" action="{% url 'submit_quiz' %}">
+                    {% csrf_token %}
+                    
+                    {% for q in questions_data %}
+                        <div id="question{{ forloop.counter }}" class="question-card {% if not forloop.first %}hidden{% endif %} bg-white rounded-2xl shadow-md p-6 mb-6 ">
+                            <div class="flex items-start space-x-4 mb-6">
+                                <div class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <span class="font-bold text-primary-700">{{ forloop.counter }}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 leading-relaxed">{{ q.question.text }}</h3>
+                                    {% if q.question.difficulty == 'easy' %}
+                                        <span class="inline-block mt-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Easy</span>
+                                    {% elif q.question.difficulty == 'medium' %}
+                                        <span class="inline-block mt-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">Medium</span>
+                                    {% else %}
+                                        <span class="inline-block mt-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">Hard</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3 ml-14">
+                                {% for option in q.options %}
+                                    <label class="quiz-option flex items-center space-x-4 p-4 rounded-xl border-2 border-gray-200 cursor-pointer hover:border-primary-300 hover:bg-gray-50 {% if q.selected == option.id %}selected{% endif %}"
+                                           onclick="selectOption({{ q.question.id }}, {{ option.id }}, {{ forloop.parentloop.counter }})">
+                                        <div class="option-letter w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-semibold text-gray-600 text-sm flex-shrink-0 transition-all">
+                                            {{ forloop|add:64|center:1 }}
+                                        </div>
+                                        <span class="text-gray-800 flex-1">{{ option.text }}</span>
+                                        <input type="radio" name="question_{{ q.question.id }}" value="{{ option.id }}" 
+                                               class="hidden" {% if q.selected == option.id %}checked{% endif %}>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Navigation Buttons -->
+                            <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-100 ml-14">
+                                {% if not forloop.first %}
+                                    <button type="button" onclick="prevQuestion({{ forloop.counter }})" 
+                                            class="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-all">
+                                        <i class="fas fa-arrow-left mr-2"></i>Previous
+                                    </button>
+                                {% else %}
+                                    <div></div>
+                                {% endif %}
+                                
+                                {% if not forloop.last %}
+                                    <button type="button" onclick="nextQuestion({{ forloop.counter }})" 
+                                            class="px-5 py-2.5 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-all">
+                                        Next<i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                {% else %}
+                                    <button type="button" onclick="confirmSubmit()" 
+                                            class="px-5 py-2.5 bg-accent-600 text-white rounded-xl font-medium hover:bg-accent-700 transition-all">
+                                        <i class="fas fa-check-circle mr-2"></i>Finish
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Submit Confirmation Modal -->
+<div id="submitModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 ">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check-circle text-3xl text-accent-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Submit Quiz?</h3>
+            <p class="text-gray-600 mb-2">You have answered <span id="modalAnswered" class="font-bold text-primary-700">0</span> out of {{ total_questions }} questions.</p>
+            <p class="text-gray-500 text-sm mb-6">Unanswered questions will be marked as incorrect. Are you sure you want to submit?</p>
+            <div class="flex space-x-3 justify-center">
+                <button onclick="closeSubmitModal()" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-all">
+                    Cancel
+                </button>
+                <button onclick="submitQuiz()" class="px-6 py-3 btn-primary text-white rounded-xl font-medium">
+                    <i class="fas fa-check mr-2"></i>Yes, Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Expired Modal -->
+<div id="timeExpiredModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 ">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-clock text-3xl text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Time's Up!</h3>
+            <p class="text-gray-600 mb-6">Your quiz time has expired. Your answers are being submitted automatically.</p>
+            <div class="flex justify-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-700"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Timer Variables
+    let timeRemaining = {{ time_remaining }};
+    let totalTime = {{ total_time }};
+    let currentQuestion = 1;
+    let totalQuestions = {{ total_questions }};
+    let answeredQuestions = new Set();
+    let timerInterval;
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        startTimer();
+        updateAnsweredCount();
+        updateNavButtons();
+        
+        // Restore answered state from existing selections
+        document.querySelectorAll('input[type="radio"]:checked').forEach(function(radio) {
+            let questionCard = radio.closest('.question-card');
+            let qNum = parseInt(questionCard.id.replace('question', ''));
+            answeredQuestions.add(qNum);
+        });
+        updateAnsweredCount();
+    });
+    
+    // Timer Function
+    function startTimer() {
+        updateTimerDisplay();
+        timerInterval = setInterval(function() {
+            timeRemaining--;
+            updateTimerDisplay();
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                showTimeExpiredModal();
+                setTimeout(function() {
+                    submitQuiz();
+                }, 2000);
+            }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        const timerEl = document.getElementById('timer');
+        timerEl.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        
+        // Visual warnings
+        const timerIcon = document.getElementById('timerIcon');
+        if (timeRemaining <= 300) { // 5 minutes
+            timerEl.classList.add('text-red-300');
+            timerIcon.classList.add('timer-warning');
+        }
+        if (timeRemaining <= 60) { // 1 minute
+            timerEl.classList.add('text-red-400');
+        }
+    }
+    
+    // Question Navigation
+    function goToQuestion(index) {
+        document.querySelectorAll('.question-card').forEach(function(card, i) {
+            card.classList.add('hidden');
+        });
+        document.getElementById('question' + (index + 1)).classList.remove('hidden');
+        currentQuestion = index + 1;
+        updateNavButtons();
+    }
+    
+    function nextQuestion(current) {
+        if (current < totalQuestions) {
+            goToQuestion(current);
+        }
+    }
+    
+    function prevQuestion(current) {
+        if (current > 1) {
+            goToQuestion(current - 2);
+        }
+    }
+    
+    // Option Selection
+    function selectOption(questionId, optionId, questionNum) {
+        // Update visual state
+        const card = document.getElementById('question' + questionNum);
+        card.querySelectorAll('.quiz-option').forEach(function(opt) {
+            opt.classList.remove('selected');
+        });
+        event.currentTarget.classList.add('selected');
+        
+        // Update radio
+        const radio = event.currentTarget.querySelector('input[type="radio"]');
+        radio.checked = true;
+        
+        // Track answered
+        answeredQuestions.add(questionNum);
+        updateAnsweredCount();
+        updateNavButtons();
+        
+        // Save answer via AJAX
+        saveAnswer(questionId, optionId);
+    }
+    
+    function saveAnswer(questionId, optionId) {
+        const formData = new FormData();
+        formData.append('question_id', questionId);
+        formData.append('option_id', optionId);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch('{% url "save_answer" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Answer saved');
+            }
+        })
+        .catch(error => console.error('Error saving answer:', error));
+    }
+    
+    function updateAnsweredCount() {
+        document.getElementById('answeredCount').textContent = answeredQuestions.size;
+        const progress = (answeredQuestions.size / totalQuestions) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+    }
+    
+    function updateNavButtons() {
+        document.querySelectorAll('.question-nav-btn').forEach(function(btn, i) {
+            btn.classList.remove('current');
+            if (i + 1 === currentQuestion) {
+                btn.classList.add('current');
+            }
+            if (answeredQuestions.has(i + 1)) {
+                btn.classList.add('answered');
+            }
+        });
+    }
+    
+    // Submit Modal
+    function confirmSubmit() {
+        document.getElementById('modalAnswered').textContent = answeredQuestions.size;
+        document.getElementById('submitModal').classList.remove('hidden');
+    }
+    
+    function closeSubmitModal() {
+        document.getElementById('submitModal').classList.add('hidden');
+    }
+    
+    function showTimeExpiredModal() {
+        document.getElementById('timeExpiredModal').classList.remove('hidden');
+    }
+    
+    function submitQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quizForm').submit();
+    }
+    
+    // Prevent accidental navigation
+    window.addEventListener('beforeunload', function(e) {
+        if (timeRemaining > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Import Questions - QuizMaster{% endblock %}
+
+{% block content %}
+<section class="py-8 px-4 bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 ">
+            <a href="{% url 'manage_questions' %}" class="inline-flex items-center text-sm text-gray-600 hover:text-primary-700 transition-colors mb-4">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Questions
+            </a>
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-accent-100 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-upload text-accent-700"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Import Questions</h1>
+                    <p class="text-gray-600 text-sm">Import questions from JSON or CSV files</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload Form -->
+        <div class="bg-white rounded-2xl shadow-md p-8 mb-6 ">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-primary-400 transition-all" id="dropZone">
+                    <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-primary-700"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Upload Question File</h3>
+                    <p class="text-gray-600 text-sm mb-4">Drag and drop your file here, or click to browse</p>
+                    <input type="file" name="file" id="fileInput" accept=".json,.csv" required
+                        class="hidden" onchange="updateFileName(this)">
+                    <label for="fileInput" class="px-6 py-3 btn-primary text-white rounded-xl font-medium inline-flex items-center cursor-pointer">
+                        <i class="fas fa-folder-open mr-2"></i>Choose File
+                    </label>
+                    <p class="text-gray-500 text-xs mt-3" id="fileName">Supported formats: JSON, CSV</p>
+                </div>
+                
+                <div class="flex items-center justify-between pt-4">
+                    <a href="{% url 'manage_questions' %}" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-all">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl font-medium inline-flex items-center">
+                        <i class="fas fa-upload mr-2"></i>Import Questions
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Format Templates -->
+        <div class="grid md:grid-cols-2 gap-6 ">
+            <div class="bg-white rounded-2xl shadow-md p-6">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-file-code text-yellow-700"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">JSON Format</h3>
+                        <p class="text-xs text-gray-500">Array of question objects</p>
+                    </div>
+                </div>
+                <pre class="bg-gray-900 rounded-xl p-4 text-xs text-green-400 overflow-x-auto"><code>{{ json_template }}</code></pre>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-md p-6">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-file-csv text-green-700"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">CSV Format</h3>
+                        <p class="text-xs text-gray-500">Comma-separated values</p>
+                    </div>
+                </div>
+                <pre class="bg-gray-900 rounded-xl p-4 text-xs text-blue-400 overflow-x-auto"><code>{{ csv_template }}</code></pre>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function updateFileName(input) {
+    const fileName = document.getElementById('fileName');
+    if (input.files && input.files[0]) {
+        fileName.textContent = 'Selected: ' + input.files[0].name;
+        fileName.classList.add('text-green-600', 'font-medium');
+    }
+}
+
+// Drag and drop
+const dropZone = document.getElementById('dropZone');
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('border-primary-400', 'bg-primary-50');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('border-primary-400', 'bg-primary-50');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-primary-400', 'bg-primary-50');
+    const files = e.dataTransfer.files;
+    if (files.length) {
+        document.getElementById('fileInput').files = files;
+        updateFileName(document.getElementById('fileInput'));
+    }
+});
+</script>
+{% endblock %}
